@@ -1,79 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cross-Browser QRCode generator for Javascript</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="jquery.qrcode-0.7.0.js"></script>
+</head>
+<body>
+
 <?php
 
-require '../phpqrcode/phpqrcode.php';
+require_once '../lib/PHPGangsta/GoogleAuthenticator.php';
 
+$ga = new PHPGangsta_GoogleAuthenticator();
+$secret = isset($_POST['secret']) ? $_POST['secret'] : $ga->createSecret();
 
-// text output
-$codeContents = 'otpauth://totp/infoATphpgangsta.de?secret=OQB6ZZGYHCPSX4AKotpauth://totp/infoATphpgangsta.de?secret=OQB6ZZGYHCPSX4AKotpauth://totp/infoATphpgangsta.de?secret=OQB6ZZGYHCPSX4AK';
-
-// generating
-$text = QRcode::text($codeContents, false, QR_ECLEVEL_L);
-
-echo '<table class="qr">';
-foreach ($text as $row) {
-    echo '<tr>';
-    foreach (str_split($row) as $character) {
-        echo "<td class='". ($character == 1 ? 'b' : 'w') ."'></td>";
-    }
-    echo '</tr>';
-}
-echo '</table><br/>';
-
-
-// generating
-$text = QRcode::text($codeContents, false, QR_ECLEVEL_M);
-
-echo '<table class="qr">';
-foreach ($text as $row) {
-    echo '<tr>';
-    foreach (str_split($row) as $character) {
-        echo "<td class='". ($character == 1 ? 'b' : 'w') ."'></td>";
-    }
-    echo '</tr>';
-}
-echo '</table><br/>';
-
-// generating
-$text = QRcode::text($codeContents, false, QR_ECLEVEL_H);
-
-echo '<table class="qr">';
-foreach ($text as $row) {
-    echo '<tr>';
-    foreach (str_split($row) as $character) {
-        echo "<td class='". ($character == 1 ? 'b' : 'w') ."'></td>";
-    }
-    echo '</tr>';
-}
-echo '</table><br/>';
-
-// generating
-$text = QRcode::text($codeContents, false, QR_ECLEVEL_Q);
-
-echo '<table class="qr">';
-foreach ($text as $row) {
-    echo '<tr>';
-    foreach (str_split($row) as $character) {
-        echo "<td class='". ($character == 1 ? 'b' : 'w') ."'></td>";
-    }
-    echo '</tr>';
-}
-echo '</table><br/>';
-
+$issuer = 'JRM Test';
+$account = 'demo@jrm.cc';
+$otpauth = 'otpauth://totp/'.rawurlencode("$issuer:$account").'?secret='.rawurlencode($secret).'&issuer='.rawurlencode($issuer);
 ?>
 
-<style>
+<form action="/" method="post">
+    <label>Secret: <input id="secret" name="secret" type="text" value="<?= $secret ?>" style="width:80%" /></label><br />
+    <label>QR Content: <input id="text" type="text" value="<?= $otpauth ?>" style="width:80%" /></label><br />
+    <input type="submit"/>
+</form>
+<br/>
+<div id="qrcode"></div>
 
-    table{
-        border-collapse: collapse;
-    }
-    table.qr td {
-        width: 4px;
-        height: 6px;
-    }
-    table.qr td.w {
-        background: #fff;
-    }
-    table.qr td.b {
-        background: #000;
-    }
-</style>
+<script type="text/javascript">
+    $('#qrcode').html('').qrcode({
+        text: '<?= $otpauth ?>',
+	    ecLevel: 'L',
+	    size: 200,
+	    render: 'image',
+    });
+</script>
+</body>
