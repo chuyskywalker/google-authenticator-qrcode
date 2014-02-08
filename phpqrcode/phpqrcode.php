@@ -199,12 +199,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         }
         
         //----------------------------------------------------------------------
-        public static function clearCache()
-        {
-            self::$frames = array();
-        }
-        
-        //----------------------------------------------------------------------
         public static function buildCache()
         {
 			QRtools::markTime('before_build_cache');
