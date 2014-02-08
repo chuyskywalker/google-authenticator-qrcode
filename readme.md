@@ -15,3 +15,12 @@ The rough of this is:
 In a real world application you would save the secret code into your database,
 preferably encrypted somehow, and extract it whenever you needed to validate
 a user at login.
+
+Projects this builds upon:
+
+ * https://github.com/PHPGangsta/GoogleAuthenticator
+ * https://github.com/lrsjng/jQuery.qrcode
+
+The site configuration here is my own quirky nginx setup, but you should be
+able to toss the `pages/` and `lib/` directory in just about any webserver
+which has PHP support and it should work fine.
