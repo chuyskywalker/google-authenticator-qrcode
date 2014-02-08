@@ -7,6 +7,19 @@
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" ></script>
 <script type="text/javascript" src="jquery.qrcode-0.7.0.js"></script>
 </head>
+<style>
+    label {
+        width: 70px;
+        text-align: right;
+        display: inline-block;
+    }
+    input[type="text"] {
+        width: 300px;
+    }
+    input[type="submit"] {
+        margin-left: 74px;
+    }
+</style>
 <body>
 
 <?php
@@ -15,18 +28,20 @@ require_once '../lib/PHPGangsta/GoogleAuthenticator.php';
 
 $ga = new PHPGangsta_GoogleAuthenticator();
 $secret = isset($_POST['secret']) ? $_POST['secret'] : $ga->createSecret();
+$issuer = isset($_POST['secret']) ? $_POST['secret'] : 'Issuer Name';
+$account = isset($_POST['secret']) ? $_POST['secret'] : 'Account Name';
 
-$issuer = 'JRM Test';
-$account = 'demo@jrm.cc';
 $otpauth = 'otpauth://totp/'.rawurlencode("$issuer:$account").'?secret='.rawurlencode($secret).'&issuer='.rawurlencode($issuer);
 ?>
 
 <form action="/" method="post">
-    <label>Secret: <input id="secret" name="secret" type="text" value="<?= $secret ?>" style="width:80%" /></label><br />
-    <label>QR Content: <input id="text" type="text" value="<?= $otpauth ?>" style="width:80%" /></label><br />
+    <label for="secret">Secret:</label> <input id="secret" name="secret" type="text" value="<?= $secret ?>" /><br />
+    <label for="issuer">Issuer:</label> <input id="issuer" name="issuer" type="text" value="<?= $issuer ?>" /><br />
+    <label for="account">Account:</label> <input id="account" name="account" type="text" value="<?= $account ?>"  /><br />
     <input type="submit"/>
 </form>
 <br/>
+<pre><?= $otpauth ?></pre>
 <div id="qrcode"></div>
 
 <script type="text/javascript">
@@ -37,4 +52,5 @@ $otpauth = 'otpauth://totp/'.rawurlencode("$issuer:$account").'?secret='.rawurle
 	    render: 'image',
     });
 </script>
+
 </body>
