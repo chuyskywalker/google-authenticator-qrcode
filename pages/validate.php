@@ -37,7 +37,7 @@ if ($secret && $otp) {
 
     $ga = new PHPGangsta_GoogleAuthenticator();
 
-    $checkResult = $ga->verifyCode($_POST['secret'], $_POST['otp'], 2);    // 2 = 2*30sec clock tolerance
+    $checkResult = $ga->verifyCode($_POST['secret'], $_POST['otp'], 2); // 2 = 2*30sec clock tolerance (aka, the current and previous code will both work)
     if ($checkResult) {
         echo 'CODE OK';
     } else {
