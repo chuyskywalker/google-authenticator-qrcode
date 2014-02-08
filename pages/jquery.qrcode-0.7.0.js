@@ -321,6 +321,47 @@
 		},
 
 		// Returns a `div` element representing the QR code for the given settings.
+		createTable = function (settings) {
+
+			var qr = createQRCode(settings.text, settings.ecLevel, settings.minVersion, settings.maxVersion, settings.quiet);
+			if (!qr) {
+				return null;
+			}
+
+			var moduleSize = Math.floor(settings.size / qr.moduleCount),
+				row,
+				col,
+				containerCSS = {
+					padding: 0,
+					margin: 0,
+					borderCollapse: 'collapse',
+					backgroundColor: (settings.background ? settings.background : '#fff')
+				},
+				moduleCSS = {
+					width: moduleSize,
+					height: moduleSize
+				},
+				darkCSS = {
+					'background-color': settings.fill
+				},
+				$tbl = $('<table/>').data('qrcode', qr).css(containerCSS);
+
+			for (row = 0; row < qr.moduleCount; row += 1) {
+				var $row = $('<tr/>');
+				for (col = 0; col < qr.moduleCount; col += 1) {
+					var $td = $('<td/>').css(moduleCSS);
+					if (qr.isDark(row, col)) {
+						$td.css(darkCSS);
+					}
+					$td.appendTo($row);
+				}
+				$row.appendTo($tbl);
+			}
+
+			return $tbl;
+		},
+
+		// Returns a `div` element representing the QR code for the given settings.
 		createDiv = function (settings) {
 
 			var qr = createQRCode(settings.text, settings.ecLevel, settings.minVersion, settings.maxVersion, settings.quiet);
@@ -386,6 +427,8 @@
 				return createCanvas(settings);
 			} else if (canvasAvailable && settings.render === 'image') {
 				return createImage(settings);
+			} else if (canvasAvailable && settings.render === 'table') {
+				return createTable(settings);
 			}
 
 			return createDiv(settings);
@@ -398,7 +441,7 @@
 		// ----------------
 		defaults = {
 
-			// render method: `'canvas'`, `'image'` or `'div'`
+			// render method: `'canvas'`, `'image'` or `'div'` or `'table'`
 			render: 'canvas',
 
 			// version range somewhere in 1 .. 40
