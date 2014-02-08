@@ -23,11 +23,12 @@ class PHPGangsta_GoogleAuthenticator
     public function createSecret($secretLength = 16)
     {
         $validChars = $this->_getBase32LookupTable();
-        unset($validChars[32]);
+        unset($validChars[32]); // the '=' character is unwanted
 
         $secret = '';
+        $alen = count($validChars)-1;
         for ($i = 0; $i < $secretLength; $i++) {
-            $secret .= $validChars[array_rand($validChars)];
+            $secret .= $validChars[mt_rand(0, $alen)];
         }
         return $secret;
     }
