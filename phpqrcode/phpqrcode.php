@@ -168,7 +168,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         }
         
         //----------------------------------------------------------------------
-        public static function tcpdfBarcodeArray($code, $mode = 'QR,L', $tcPdfVersion = '4.5.037')
+        public static function tcpdfBarcodeArray($code, $mode = 'QR,L')
         {
             $barcode_array = array();
             
@@ -575,9 +575,9 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         
         /** --------------------------------------------------------------------
          * Put an alignment marker.
-         * @param frame
-         * @param width
-         * @param ox,oy center coordinate of the pattern
+         * @param array $frame
+         * @param int $ox center x coordinate of the pattern
+         * @param int $oy center y coordinate of the pattern
          */
         public static function putAlignmentMarker(array &$frame, $ox, $oy)
         {
@@ -1048,7 +1048,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         
             if(!QRinput::check($mode, $size, $setData)) {
                 throw new Exception('Error m:'.$mode.',s:'.$size.',d:'.join(',',$setData));
-                return null;
             }
             
             $this->mode = $mode;
@@ -1149,7 +1148,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         {
             try {
 
-                $bs = new QRbitrtream();
+                $bs = new QRbitstream();
                 
                 $bs->appendNum(4, 0x8);
                 $bs->appendNum(QRspec::lengthIndicator(QR_MODE_KANJI, $version), (int)($this->size / 2));
@@ -1198,17 +1197,16 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         //----------------------------------------------------------------------
         public function estimateBitStreamSizeOfEntry($version)
         {
-            $bits = 0;
 
             if($version == 0) 
                 $version = 1;
 
             switch($this->mode) {
-                case QR_MODE_NUM:        $bits = QRinput::estimateBitsModeNum($this->size);    break;
-                case QR_MODE_AN:        $bits = QRinput::estimateBitsModeAn($this->size);    break;
-                case QR_MODE_8:            $bits = QRinput::estimateBitsMode8($this->size);    break;
-                case QR_MODE_KANJI:        $bits = QRinput::estimateBitsModeKanji($this->size);break;
-                case QR_MODE_STRUCTURE:    return STRUCTURE_HEADER_BITS;            
+                case QR_MODE_NUM:        $bits = QRinput::estimateBitsModeNum($this->size);   break;
+                case QR_MODE_AN:         $bits = QRinput::estimateBitsModeAn($this->size);    break;
+                case QR_MODE_8:          $bits = QRinput::estimateBitsMode8($this->size);     break;
+                case QR_MODE_KANJI:      $bits = QRinput::estimateBitsModeKanji($this->size); break;
+                case QR_MODE_STRUCTURE:  return STRUCTURE_HEADER_BITS;
                 default:
                     return 0;
             }
@@ -1276,6 +1274,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
 
     class QRinput {
 
+        /** @var QRinputItem[] */
         public $items;
         
         private $version;
@@ -1286,7 +1285,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         {
             if ($version < 0 || $version > QRSPEC_VERSION_MAX || $level > QR_ECLEVEL_H) {
                 throw new Exception('Invalid version no');
-                return NULL;
             }
             
             $this->version = $version;
@@ -1304,7 +1302,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         {
             if($version < 0 || $version > QRSPEC_VERSION_MAX) {
                 throw new Exception('Invalid version no');
-                return -1;
             }
 
             $this->version = $version;
@@ -1323,7 +1320,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         {
             if($level > QR_ECLEVEL_H) {
                 throw new Exception('Invalid ECLEVEL');
-                return -1;
             }
 
             $this->level = $level;
@@ -1364,7 +1360,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
             $buf = array($size, $index, $parity);
             
             try {
-                $entry = new QRinputItem(QR_MODE_STRUCTURE, 3, buf);
+                $entry = new QRinputItem(QR_MODE_STRUCTURE, 3, $buf);
                 array_unshift($this->items, $entry);
                 return 0;
             } catch (Exception $e) {
@@ -1470,7 +1466,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         }
         
         //----------------------------------------------------------------------
-        public function estimateBitsModeKanji($size)
+        public static function estimateBitsModeKanji($size)
         {
             return (int)(($size / 2) * 13);
         }
@@ -1533,7 +1529,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         public function estimateVersion()
         {
             $version = 0;
-            $prev = 0;
             do {
                 $prev = $version;
                 $bits = $this->estimateBitStreamSize($prev);
@@ -1623,7 +1618,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
                 $ver = QRspec::getMinimumVersion((int)(($bits + 7) / 8), $this->level);
                 if($ver < 0) {
                     throw new Exception('WRONG VERSION');
-                    return -1;
                 } else if($ver > $this->getVersion()) {
                     $this->setVersion($ver);
                 } else {
@@ -1635,7 +1629,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         }
         
         //----------------------------------------------------------------------
-        public function appendPaddingBit(&$bstream)
+        public function appendPaddingBit(QRbitstream &$bstream)
         {
             $bits = $bstream->size();
             $maxwords = QRspec::getDataLength($this->version, $this->level);
@@ -1960,11 +1954,14 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
     class QRsplit {
 
         public $dataStr = '';
+
+        /** @var QRinput */
         public $input;
+
         public $modeHint;
 
         //----------------------------------------------------------------------
-        public function __construct($dataStr, $input, $modeHint) 
+        public function __construct($dataStr, QRinput $input, $modeHint)
         {
             $this->dataStr  = $dataStr;
             $this->input    = $input;
@@ -2113,7 +2110,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
             if($ret < 0)
                 return -1;
 
-            return $run;
+            return $ret;
         }
 
         //----------------------------------------------------------------------
@@ -2184,11 +2181,11 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
                 switch ($mode) {
                     case QR_MODE_NUM: $length = $this->eatNum(); break;
                     case QR_MODE_AN:  $length = $this->eatAn(); break;
-                    case QR_MODE_KANJI:
-                        if ($hint == QR_MODE_KANJI)
-                                $length = $this->eatKanji();
-                        else    $length = $this->eat8();
-                        break;
+//                    case QR_MODE_KANJI:
+//                        if ($hint == QR_MODE_KANJI)
+//                                $length = $this->eatKanji();
+//                        else    $length = $this->eat8();
+//                        break;
                     default: $length = $this->eat8(); break;
                 
                 }
@@ -2198,6 +2195,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
                 
                 $this->dataStr = substr($this->dataStr, $length);
             }
+            // todo: there should be a null or 1 return here I think
         }
 
         //----------------------------------------------------------------------
@@ -2387,15 +2385,15 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         //----------------------------------------------------------------------
         public function encode_rs_char($data, &$parity)
         {
-            $MM       =& $this->mm;
+//            $MM       =& $this->mm;
+//            $FCR      =& $this->fcr;
+//            $PRIM     =& $this->prim;
+//            $IPRIM    =& $this->iprim;
             $NN       =& $this->nn;
             $ALPHA_TO =& $this->alpha_to;
             $INDEX_OF =& $this->index_of;
             $GENPOLY  =& $this->genpoly;
             $NROOTS   =& $this->nroots;
-            $FCR      =& $this->fcr;
-            $PRIM     =& $this->prim;
-            $IPRIM    =& $this->iprim;
             $PAD      =& $this->pad;
             $A0       =& $NN;
 
@@ -2547,6 +2545,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         }
         
         //----------------------------------------------------------------------
+        // todo: well this is lovely, documented code...
         public function mask0($x, $y) { return ($x+$y)&1;                       }
         public function mask1($x, $y) { return ($y&1);                          }
         public function mask2($x, $y) { return ($x%3);                          }
@@ -2603,7 +2602,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         public function makeMaskNo($maskNo, $width, $s, &$d, $maskGenOnly = false) 
         {
             $b = 0;
-            $bitMask = array();
             
             $fileName = QR_CACHE_DIR.'mask_'.$maskNo.DIRECTORY_SEPARATOR.'mask_'.$width.'_'.$maskNo.'.dat';
 
@@ -2621,7 +2619,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
             }
 
             if ($maskGenOnly)
-                return;
+                return; // todo: returns what?
                 
             $d = $s;
 
@@ -2875,7 +2873,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
             $ret = $this->init($spec);
             if($ret < 0) {
                 throw new Exception('block alloc error');
-                return null;
             }
 
             $this->count = 0;
@@ -2927,8 +2924,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         //----------------------------------------------------------------------
         public function getCode()
         {
-            $ret;
-
             if($this->count < $this->dataLength) {
                 $row = $this->count % $this->blocks;
                 $col = $this->count / $this->blocks;
@@ -3041,13 +3036,12 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         //----------------------------------------------------------------------
         public function encodeString8bit($string, $version, $level)
         {
-            if(string == NULL) {
+            if($string === NULL) {
                 throw new Exception('empty string!');
-                return NULL;
             }
 
             $input = new QRinput($version, $level);
-            if($input == NULL) return NULL;
+            if($input === NULL) return NULL;
 
             $ret = $input->append($input, QR_MODE_8, strlen($string), str_split($string));
             if($ret < 0) {
@@ -3063,7 +3057,6 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
 
             if($hint != QR_MODE_8 && $hint != QR_MODE_KANJI) {
                 throw new Exception('bad hint');
-                return NULL;
             }
 
             $input = new QRinput($version, $level);
@@ -3081,7 +3074,7 @@ define('QR_PNG_MAXIMUM_SIZE', 1024); // maximum allowed png image width (in pixe
         public static function png($text, $outfile = false, $level = QR_ECLEVEL_L, $size = 3, $margin = 4, $saveandprint=false) 
         {
             $enc = QRencode::factory($level, $size, $margin);
-            return $enc->encodePNG($text, $outfile, $saveandprint=false);
+            $enc->encodePNG($text, $outfile, $saveandprint=false);
         }
 
         //----------------------------------------------------------------------
