@@ -28,13 +28,13 @@ require_once '../lib/PHPGangsta/GoogleAuthenticator.php';
 
 $ga = new PHPGangsta_GoogleAuthenticator();
 $secret = isset($_POST['secret']) ? $_POST['secret'] : $ga->createSecret();
-$issuer = isset($_POST['secret']) ? $_POST['secret'] : 'Issuer Name';
-$account = isset($_POST['secret']) ? $_POST['secret'] : 'Account Name';
+$issuer = isset($_POST['issuer']) ? $_POST['issuer'] : 'Issuer Name';
+$account = isset($_POST['account']) ? $_POST['account'] : 'Account Name';
 
 $otpauth = 'otpauth://totp/'.rawurlencode("$issuer:$account").'?secret='.rawurlencode($secret).'&issuer='.rawurlencode($issuer);
 ?>
 
-<form action="/" method="post">
+<form action="generate.php" method="post">
     <label for="secret">Secret:</label> <input id="secret" name="secret" type="text" value="<?= $secret ?>" /><br />
     <label for="issuer">Issuer:</label> <input id="issuer" name="issuer" type="text" value="<?= $issuer ?>" /><br />
     <label for="account">Account:</label> <input id="account" name="account" type="text" value="<?= $account ?>"  /><br />
